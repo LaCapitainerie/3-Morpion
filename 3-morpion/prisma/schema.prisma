@@ -15,13 +15,17 @@ datasource db {
 
 model Player {
   id    Int    @id @default(autoincrement())
-  
   name  String
   email String
   password String
+  role  String
+  token String
 
   moves  Move[]
-  games PlayerInGame[]
+  games  PlayerInGame[]
+
+  @@map("players")  // Map this model to the "players" table in the database
+  @@unique([email])
 }
 
 model PlayerInGame {

@@ -5,6 +5,7 @@ export const PlayerSchema = z.object({
   name: z.string(),
   email: z.string(),
   password: z.string(),
+  role: z.string(),
   moves: z.array(z.object({
     id: z.number(),
     x: z.number(),

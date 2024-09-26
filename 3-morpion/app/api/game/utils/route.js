@@ -1,32 +1,20 @@
-import { route } from "@/lib/safe-route";
-import { PrismaClient } from "@prisma/client";
-import { GameCreateSchema } from "@/lib/zodSchema";
+import { authRoute } from "@/lib/safe-route";
+import { z } from "zod";
 
-const prisma = new PrismaClient();
+const querySchema = z.object({
+  id: z.string().optional(),
+});
 
-export const GET = createZodRoute()
-  .params(paramsSchema)
+export const GET = authRoute
   .query(querySchema)
-  .body(bodySchema)
   .handler((request, context) => {
-    const { id } = context.params;
-    const { search } = context.query;
-    const { field } = context.body;
-
-    return Response.json({ id, search, field }), { status: 200 };
+    
+    const user = context.data.user;
+    return Response.json({ user }, { status: 200 });
   });
 
-export const POST = route
-    .body(GameCreateSchema)
-    .handler(async (req, { body }) => {
-        if (await prisma.game.create({
-        data: {
-            name: body.name,
-            email: body.email,
-        },
-        })) {
-        return { message: "Game created" };
-        } else {
-        throw new Error("Game not created");
-        };
-    });
+export const POST = authRoute
+  .handler((request, context) => {
+    const user = context.data.user;
+    return Response.json({ user }, { status: 200 });
+  });
