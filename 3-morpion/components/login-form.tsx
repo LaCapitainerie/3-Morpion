@@ -40,7 +40,7 @@ export function ProfileForm() {
       body: JSON.stringify(values),
     });
 
-    if (result.ok) {
+    if (result.ok || result.status === 400) {
       
       const jwt = await fetch("/api/users/connection", {
         method: "POST",
