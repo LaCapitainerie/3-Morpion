@@ -1,6 +1,6 @@
 import { createHmac } from 'crypto';
 
-const SECRET = 'e4291a9196a93eb12623cc942e17eda6718f35f078596b29e2fd06ff0c05a2af';
+const SECRET = process.env.JWT_SECRET
 
 // Base64 URL Encode (used for JWT encoding)
 function base64UrlEncode(str: string) {
@@ -13,7 +13,12 @@ function base64UrlEncode(str: string) {
 
 // Create the HMAC SHA-256 signature
 function createSignature(header: string, payload: string) {
+  if (!SECRET) {
+    throw new Error('No JWT secret set');
+  };
+  
   const data = `${header}.${payload}`;
+
   return createHmac('sha256', SECRET)
     .update(data)
     .digest('base64')

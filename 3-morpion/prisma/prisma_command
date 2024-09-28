@@ -1,0 +1,26 @@
+# Initialiser Prisma dans votre projet
+npx prisma init
+
+# Générer le client Prisma après avoir modifié le schéma
+npx prisma generate
+
+# Migrer votre base de données en fonction de votre schéma Prisma
+npx prisma migrate dev --name <nom_de_la_migration>
+
+# Vérifier l'état de la base de données par rapport au schéma Prisma
+npx prisma migrate status
+
+# Réinitialiser la base de données et appliquer toutes les migrations
+npx prisma migrate reset
+
+# Ouvrir l'interface Prisma Studio pour gérer vos données
+npx prisma studio
+
+# Introspecter une base de données existante pour générer un schéma Prisma
+npx prisma db pull
+
+# Pousser les modifications du schéma Prisma vers la base de données
+npx prisma db push
+
+# Vérifier le format du fichier de schéma Prisma
+npx prisma format

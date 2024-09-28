@@ -24,7 +24,7 @@ model Player {
   moves  Move[]
   games  PlayerInGame[]
 
-  @@map("players")  // Map this model to the "players" table in the database
+  @@map("player")
   @@unique([email])
 }
 
@@ -44,6 +44,9 @@ model Game {
   players    PlayerInGame[]
 
   currentState String
+
+  @@map("game")
+  @@unique([id])
 }
 
 model Move {
@@ -57,4 +60,7 @@ model Move {
 
   player_id Int
   player    Player @relation(fields: [player_id], references: [id])
+
+  @@map("move")
+  @@unique([id])
 }
