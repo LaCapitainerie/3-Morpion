@@ -1,53 +1,68 @@
 import { route } from "@/lib/safe-route";
 import { PrismaClient } from "@prisma/client";
-import { playerPostSchema } from "../userSchema";
 import { generateToken } from "@/lib/jwt";
-
-
-// -- Connection route -- //
-// POST /api/users/connection
-// GET /api/users/connection
-// -- Connection route -- //
 
 
 const prisma = new PrismaClient();
 
+
+/* -- POST -- //
+POST /api/users/connection
+
+{
+  "email": "string",
+  "password": "string"
+} => {
+  "token": "string"
+}
+// ---------- */
+const playerPostSchema = z.object({
+  name: z.string(),
+  email: z.string(),
+  password: z.string(),
+});
 export const POST = route
   .body(playerPostSchema)
   .handler(async (req, { body }) => {
 
-    try {
+    const user = await prisma.player.findFirst({
+      where: {
+        email: body.email,
+      },
+    });
 
-      const user = await prisma.player.findFirst({
-        where: {
-          email: body.email,
-        },
-      });
-
-      if (user) {
-        
-        const jwt = await prisma.player.update({
-          where: {
-            id: user.id,
+    if(!user) {
+      try {
+        await fetch("/api/users/utils", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-          data: {
-            token: generateToken({...user, password: '',  token: ''}, '1h'),
-          },
+          body: JSON.stringify(body),
         });
-
-        return Response.json({ jwt: jwt }, { status: 200 });
-      } else {
-        throw new Error("User not connected");
+      } catch (error) {
+        return Response.json({ message: error }, { status: 200 });
       };
+    };
 
+    const newUser = user || await prisma.player.findFirst({
+      where: {
+        email: body.email,
+      },
+    });
 
+    if(!newUser) {
+      return Response.json({ message: "User not created" }, { status: 500 });
+    };
+      
+    const jwt = await prisma.player.update({
+      where: {
+        id: newUser.id,
+      },
+      data: {
+        token: generateToken({...newUser, password: '',  token: ''}, '1h'),
+      },
+    });
 
-    } catch (err) {
-      return Response.json({ message: err }, { status: 400 });
-    }
+    return Response.json({ token: jwt.token }, { status: 200 });
   });
-
-export const GET = route.handler(async () => {
-  const users = await prisma.player.findMany();
-  return Response.json(users, { status: 200 });
-});

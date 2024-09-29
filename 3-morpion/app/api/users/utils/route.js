@@ -1,10 +1,28 @@
 import { route } from "@/lib/safe-route";
 import { PrismaClient } from "@prisma/client";
-import { playerPostSchema, playerDeleteSchema } from "../userSchema";
+import { z } from "zod";
+
 
 const prisma = new PrismaClient();
 
 
+/* -- POST -- //
+POST /api/users/utils
+
+{
+  "name": "string",
+  "email": "string",
+  "password": "string"
+} => {
+  "message": "string"
+}
+// ---------- */
+
+const playerPostSchema = z.object({
+  name: z.string(),
+  email: z.string(),
+  password: z.string(),
+});
 export const POST = route
   .body(playerPostSchema)
   .handler(async (req, { body }) => {
@@ -33,18 +51,47 @@ export const POST = route
       if (newUser) {
         return Response.json({ message: "User created" }, { status: 200 });
       } else {
-        throw new Error("User not created");
+        return Response.json({ message: "User not created" }, { status: 500 });
       };
     } catch (err) {
       return Response.json({ message: err.message }, { status: 400 });
-    }
+    };
   });
 
-export const GET = route.handler(async () => {
+
+
+/* -- GET -- //
+GET /api/users/utils => {
+  "id": "string",
+  "name": "string",
+  "email": "string",
+  "password": "string",
+  "role": "string",
+  "token": "string"
+} | {
+  "message": "string"
+}
+// ---------- */
+export const GET = route
+  .handler(async () => {
   const users = await prisma.player.findMany();
   return Response.json(users, { status: 200 });
-});
+  });
 
+
+
+/* -- DELETE -- //
+DELETE /api/users/utils
+
+{
+  "id": "string"
+} => {
+  "message": "string"
+}
+// ---------- */
+const playerDeleteSchema = z.object({
+    id: z.number(),
+});
 export const DELETE = route
   .body(playerDeleteSchema)
   .handler(async (req, { body }) => {
