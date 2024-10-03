@@ -5,5 +5,8 @@ services:
       POSTGRES_DB: 3morpion
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
+
+    volumes:
+      - ./Db/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"

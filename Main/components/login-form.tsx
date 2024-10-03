@@ -53,7 +53,9 @@ export function ProfileForm() {
       if (jwt.ok) {
         const token = await jwt.json();
 
-        document.cookie = `player:auth=${token.jwt.token}`;
+        console.log(token);
+
+        document.cookie = `player:auth=${token.token}`;
 
         window.location.href = "/dashboard";
       } else {

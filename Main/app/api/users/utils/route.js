@@ -32,7 +32,7 @@ export const POST = route
         email: body.email,
       },
     });
-
+      
     if (existingUser) {
       return Response.json({ message: "User already exists" }, { status: 400 });
     };
