@@ -14,7 +14,11 @@ class Morpion():
         self.winner = None
         self.next_grid = None
 
-    def check_winner(self):
+    def check_winner(self) -> Optional[str]:
+        """
+        Check if there is a winner in the board
+        """
+
         lines = [
             [self.board[0], self.board[1], self.board[2]],
             [self.board[3], self.board[4], self.board[5]],
@@ -34,7 +38,17 @@ class Morpion():
         
         return None
     
-    def make_move(self, indexes:Sequence[int], player:str):
+    def make_move(self, indexes:Sequence[int], player:str) -> bool:
+        """
+        Make a move in the board
+        
+        Args:
+            indexes (Sequence[int]): Indexes of the move
+            player (str): Player to make the move
+            
+        Returns:
+            bool: True if the move was successful, False otherwise
+        """
 
         if len(indexes) == 1:
             if self.board[indexes[0]] != '':
@@ -44,11 +58,16 @@ class Morpion():
             return True
         
         tmp = self.board[indexes[0]].make_move(indexes[1:], player) # type: ignore
-        if tmp:
+        if isinstance(tmp, bool) and tmp:
             self.next_grid = indexes[-1]
             return tmp
         
+        return False
+        
     def getPossibleMoves(self):
+        """
+        Get all possible moves
+        """
 
         if all(isinstance(cell, str) for cell in self.board):
             return (i for i, cell in enumerate(self.board) if cell == '')
@@ -60,17 +79,12 @@ class Morpion():
         ]
     
     def showPossibleMoves(self):
+        """
+        Print all possible moves
+        """
+
         [print(*_) for _ in self.getPossibleMoves()]
 
 
 _3morpion = Morpion()
 _3morpion.board = deque(Morpion() for _ in range(9))
-
-_3morpion.make_move([0, 7], 'X')
-_3morpion.showPossibleMoves()
-_3morpion.make_move([7, 3], 'O')
-_3morpion.showPossibleMoves()
-_3morpion.make_move([3, 7], 'X')
-_3morpion.showPossibleMoves()
-
-
