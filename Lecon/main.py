@@ -1,6 +1,12 @@
+from itertools import product
 import json
 
 class Node:
+    next_grid:int
+    current_player:str
+    move:tuple[int, int]
+    children:list['Node']
+
     def __init__(self, move, current_player, next_grid):
         self.move = move
         self.current_player = current_player
@@ -31,7 +37,7 @@ class Morpion:
             print()
         print()
 
-    def check_winner(self, grid):
+    def check_winner(self, grid: list[str]) -> str:
         lines = [
             [grid[0], grid[1], grid[2]],
             [grid[3], grid[4], grid[5]],
@@ -49,22 +55,30 @@ class Morpion:
         if all(cell != '' for cell in grid):
             return 'Stale'
         
-        return None
+        return ""
+    
+    def getPossibleMoves(self) -> list[tuple[int, int]]:
+        """
+        Get all possible moves
+        """
+        
+        if isinstance(self.next_grid, int):
+            return [(self.next_grid, pos) for pos, j in enumerate(self.board[self.next_grid]) if j == '']
+        return [(i, j) for i in range(9) for j in range(9) if self.board[i][j] == '']
 
-    def make_move(self, row, col):
-        if self.board[row][col] != '' or (self.next_grid is not None and (row // 3, col // 3) != self.next_grid):
+    def make_move(self, grid:int, cell:int) -> bool:
+        
+        if self.board[grid][cell] != '' or (self.next_grid is not None and grid != self.next_grid):
             return False
 
-        self.board[row][col] = self.current_player
-        subgrid_index = (row // 3) * 3 + (col // 3)
-        subgrid = [self.board[i][j] for i in range(subgrid_index // 3 * 3, subgrid_index // 3 * 3 + 3) for j in range(subgrid_index % 3 * 3, subgrid_index % 3 * 3 + 3)]
-        winner = self.check_winner(subgrid)
-        if winner:
-            self.super_board[subgrid_index] = winner
+        self.board[grid][cell] = self.current_player
 
-        self.next_grid = (row % 3, col % 3)
-        if self.super_board[self.next_grid[0] * 3 + self.next_grid[1]] != '':
-            self.next_grid = None
+        winner = self.check_winner(self.board[grid])
+
+        if winner:
+            self.super_board[grid] = winner
+
+        self.next_grid = cell if self.super_board[cell] == '' else None
 
         self.current_player = 'O' if self.current_player == 'X' else 'X'
         return True
@@ -81,7 +95,8 @@ class Morpion:
             node.winner = winner
             return
 
-        possible_moves = [(i, j) for i in range(9) for j in range(9) if self.board[i][j] == '' and (self.next_grid is None or (i // 3, j // 3) == self.next_grid)]
+        possible_moves = self.getPossibleMoves() #[(i, j) for i in range(9) for j in range(9) if self.board[i][j] == '' and (self.next_grid is None or (i // 3, j // 3) == self.next_grid)]
+        # print("possibles_moves", possible_moves)
         for move in possible_moves:
             new_board = [row[:] for row in self.board]
             new_super_board = self.super_board[:]
@@ -102,7 +117,7 @@ class Morpion:
 
     def save_tree(self, root):
         tree_dict = root.to_dict()
-        with open('move_tree.json', 'w') as f:
+        with open('tree.json', 'w') as f:
             json.dump(tree_dict, f, indent=4)
 
     def load_config(self, config_path):
