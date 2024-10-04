@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship, sessionmaker
 Base = declarative_base()
 
 # Create the engine for PostgreSQL
-engine = create_engine('postgresql://user:password@localhost/tree', echo=True)
+engine = create_engine('postgresql://user:password@localhost:5433/tree', echo=True)
 Session = sessionmaker(bind=engine)
 session = Session()
 
@@ -30,6 +30,3 @@ class GameTree(Base):
         self.next_grid = next_grid
         self.winner = winner
         self.parent_id = parent_id
-
-# Create tables
-Base.metadata.create_all(engine)
