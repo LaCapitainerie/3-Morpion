@@ -53,7 +53,6 @@ def get_possible_moves(game_id: int) -> list[tuple[int, int]]:
     :return: List of possible moves (tuples of (grid, cell)).
     """
 
-    # Get the game state from the database
     game_state = session.query(GameTree).filter_by(id=game_id).first()
 
     if not game_state:
