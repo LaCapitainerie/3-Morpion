@@ -1,19 +1,23 @@
-from itertools import product
 import json
+
+from store import session
+from store import GameTree
 
 class Node:
     next_grid:int
     current_player:str
     move:tuple[int, int]
     children:list['Node']
+    winner:str
+    id:int
 
-    def __init__(self, move, current_player, next_grid):
+    def __init__(self, move, current_player:str, next_grid:int) -> None:
         self.move = move
         self.current_player = current_player
         self.next_grid = next_grid
         self.children = []
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {
             'winner': None,
             'moves': {str(child.move): child.to_dict() for child in self.children}
@@ -86,41 +90,50 @@ class Morpion:
     def check_super_winner(self):
         return self.check_winner(self.super_board)
 
-    def generate_move_tree(self, node, depth, max_depth):
+    def generate_move_tree(self, node:Node, depth:int, max_depth:int) -> None:
         if depth >= max_depth:
             return
 
         winner = self.check_super_winner()
         if winner:
             node.winner = winner
+            session.add(node)
+            session.commit()
             return
 
-        possible_moves = self.getPossibleMoves() #[(i, j) for i in range(9) for j in range(9) if self.board[i][j] == '' and (self.next_grid is None or (i // 3, j // 3) == self.next_grid)]
-        # print("possibles_moves", possible_moves)
+        possible_moves = self.getPossibleMoves()
         for move in possible_moves:
-            new_board = [row[:] for row in self.board]
-            new_super_board = self.super_board[:]
             new_game = Morpion()
-            new_game.board = new_board
-            new_game.super_board = new_super_board
+            new_game.board = [row[:] for row in self.board]
+            new_game.super_board = self.super_board[:]
             new_game.current_player = self.current_player
             new_game.next_grid = self.next_grid
+
             if new_game.make_move(move[0], move[1]):
-                child_node = Node(move, new_game.current_player, new_game.next_grid)
+                child_node = GameTree(
+                    move[0],
+                    move[1],
+                    new_game.current_player,
+                    new_game.next_grid,
+                    parent_id=node.id
+                )
+                session.add(child_node)
                 node.children.append(child_node)
+                session.commit()
                 new_game.generate_move_tree(child_node, depth + 1, max_depth)
 
-    def play(self, max_depth=3):
-        root = Node(None, self.current_player, self.next_grid)
+    def play(self, max_depth:int=3):
+        root = GameTree(None, None, self.current_player, self.next_grid)
+        session.add(root)
+        session.commit()
         self.generate_move_tree(root, 0, max_depth)
-        self.save_tree(root)
 
-    def save_tree(self, root):
+    def save_tree(self, root:Node):
         tree_dict = root.to_dict()
         with open('tree.json', 'w') as f:
             json.dump(tree_dict, f, indent=4)
 
-    def load_config(self, config_path):
+    def load_config(self, config_path:str):
         with open(config_path, 'r') as f:
             config = json.load(f)
         self.board = config['board']
@@ -130,8 +143,6 @@ class Morpion:
 
 if __name__ == "__main__":
     game = Morpion()
-    # Load configuration if needed
-    # game.load_config('config.json')
     game.play(max_depth=5)
 
 
