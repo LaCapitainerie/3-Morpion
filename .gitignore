@@ -24,3 +24,5 @@ go.work.sum
 # env file
 .env
 tree.json
+
+__pycache__/

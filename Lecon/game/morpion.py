@@ -4,6 +4,8 @@ from json import dump
 from typing import Optional
 from numpy import ndarray, zeros
 from sqlalchemy.exc import IntegrityError
+from db.models import GameState
+from db import session
 
 
 class Node:
@@ -110,14 +112,6 @@ def check_winner(grid: ndarray, index: int) -> str:
     return ""
 
 
-import numpy as np
-from db.models import GameState
-from db import session
-from sqlalchemy.exc import IntegrityError
-
-def board_to_str(board: np.ndarray) -> str:
-    return "".join("".join(row) for row in board)
-
 class Morpion:
     def __init__(self,
             board:ndarray=zeros((9, 9), dtype=str),
@@ -156,9 +150,9 @@ class Morpion:
         """
         
         if self.next_grid:
-            return ((self.next_grid, pos) for pos, j in enumerate(self.board[self.next_grid]) if j == '')
-        
-        return ((i, j) for i in range(9) for j in range(9) if self.board[i][j] == '')
+            yield from ((self.next_grid, pos) for pos, j in enumerate(self.board[self.next_grid]) if j == '')
+        else:
+            yield from ((i, j) for i in range(9) for j in range(9) if self.board[i][j] == '')
 
     def make_move(self, grid:int, cell:int) -> bool:
         """
