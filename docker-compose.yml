@@ -1,12 +1,24 @@
 services:
-  db:
+  # db-app:
+  #   image: postgres:13
+  #   environment:
+  #     POSTGRES_DB: 3morpion
+  #     POSTGRES_USER: user
+  #     POSTGRES_PASSWORD: password
+
+  #   volumes:
+  #     - ./Db/init.sql:/docker-entrypoint-initdb.d/init.sql
+  #   ports:
+  #     - "5432:5432"
+
+  db-lecon:
     image: postgres:13
     environment:
-      POSTGRES_DB: 3morpion
+      POSTGRES_DB: 3-morpion-lecon
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
 
     volumes:
-      - ./Db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./Lecon/db/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      - "5433:5432"
