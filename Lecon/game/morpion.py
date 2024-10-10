@@ -2,7 +2,7 @@ from collections import deque
 from collections.abc import Generator
 from json import dump
 from typing import Optional
-from numpy import array, ndarray, zeros
+from numpy import array, ndarray
 
 VOID_CHAR = ' '
 
@@ -123,7 +123,7 @@ class Morpion:
         Get the string representation of the board
         """
         
-        return ''.join(' ' if _ == '' else _ for _ in self.board.flatten())
+        return ''.join(self.board.flatten())
 
     def getPossibleMoves(self) -> Generator[tuple[int, int], None, None]:
         """
