@@ -2,36 +2,28 @@ from collections import deque
 from collections.abc import Generator
 from json import dump
 from typing import Optional
-from numpy import ndarray, zeros
-from sqlalchemy.exc import IntegrityError
-from db.models import GameState
-from db import session
+from numpy import array, ndarray, zeros
 
+VOID_CHAR = ' '
 
 class Node:
-    next_grid:Optional[int]
     current_player:str
-    upperGrid:Optional[int]
-    subGrid:Optional[int]
+    board:str
     children:deque['Node']
 
     def __init__(self,
-        upperGrid:Optional[int],
-        subGrid:Optional[int],
         current_player:str,
-        next_grid:Optional[int],
+        board:str,
     ):
-        self.upperGrid = upperGrid
-        self.subGrid = subGrid
         self.current_player = current_player
-        self.next_grid = next_grid
+        self.board = board
         self.children = deque()
 
     def to_dict(self):
         return {
             'turn': self.current_player,
-            'winner': None,
-            'moves': {f"{child.upperGrid}-{child.subGrid}": child.to_dict() for child in self.children}
+            'board': self.board,
+            'moves': [child.to_dict() for child in self.children]
         }
 
     
@@ -49,64 +41,64 @@ def check_winner(grid: ndarray, index: int) -> str:
 
     match index:
         case 0:
-            if grid[0] == grid[1] == grid[2] != '':
+            if grid[0] == grid[1] == grid[2] != VOID_CHAR:
                 return grid[0]
-            if grid[0] == grid[3] == grid[6] != '':
+            if grid[0] == grid[3] == grid[6] != VOID_CHAR:
                 return grid[0]
-            if grid[0] == grid[4] == grid[8] != '':
+            if grid[0] == grid[4] == grid[8] != VOID_CHAR:
                 return grid[0]
         case 1:
-            if grid[0] == grid[1] == grid[2] != '':
+            if grid[0] == grid[1] == grid[2] != VOID_CHAR:
                 return grid[0]
-            if grid[1] == grid[4] == grid[7] != '':
+            if grid[1] == grid[4] == grid[7] != VOID_CHAR:
                 return grid[1]
         case 2:
-            if grid[0] == grid[1] == grid[2] != '':
+            if grid[0] == grid[1] == grid[2] != VOID_CHAR:
                 return grid[0]
-            if grid[2] == grid[5] == grid[8] != '':
+            if grid[2] == grid[5] == grid[8] != VOID_CHAR:
                 return grid[2]
-            if grid[2] == grid[4] == grid[6] != '':
+            if grid[2] == grid[4] == grid[6] != VOID_CHAR:
                 return grid[2]
         case 3:
-            if grid[3] == grid[4] == grid[5] != '':
+            if grid[3] == grid[4] == grid[5] != VOID_CHAR:
                 return grid[3]
-            if grid[0] == grid[3] == grid[6] != '':
+            if grid[0] == grid[3] == grid[6] != VOID_CHAR:
                 return grid[0]
         case 4:
-            if grid[3] == grid[4] == grid[5] != '':
+            if grid[3] == grid[4] == grid[5] != VOID_CHAR:
                 return grid[3]
-            if grid[1] == grid[4] == grid[7] != '':
+            if grid[1] == grid[4] == grid[7] != VOID_CHAR:
                 return grid[1]
-            if grid[0] == grid[4] == grid[8] != '':
+            if grid[0] == grid[4] == grid[8] != VOID_CHAR:
                 return grid[0]
-            if grid[2] == grid[4] == grid[6] != '':
+            if grid[2] == grid[4] == grid[6] != VOID_CHAR:
                 return grid[2]
         case 5:
-            if grid[3] == grid[4] == grid[5] != '':
+            if grid[3] == grid[4] == grid[5] != VOID_CHAR:
                 return grid[3]
-            if grid[2] == grid[5] == grid[8] != '':
+            if grid[2] == grid[5] == grid[8] != VOID_CHAR:
                 return grid[2]
         case 6:
-            if grid[6] == grid[7] == grid[8] != '':
+            if grid[6] == grid[7] == grid[8] != VOID_CHAR:
                 return grid[6]
-            if grid[0] == grid[3] == grid[6] != '':
+            if grid[0] == grid[3] == grid[6] != VOID_CHAR:
                 return grid[0]
-            if grid[6] == grid[4] == grid[2] != '':
+            if grid[6] == grid[4] == grid[2] != VOID_CHAR:
                 return grid[6]
         case 7:
-            if grid[6] == grid[7] == grid[8] != '':
+            if grid[6] == grid[7] == grid[8] != VOID_CHAR:
                 return grid[6]
-            if grid[1] == grid[4] == grid[7] != '':
+            if grid[1] == grid[4] == grid[7] != VOID_CHAR:
                 return grid[1]
         case 8:
-            if grid[6] == grid[7] == grid[8] != '':
+            if grid[6] == grid[7] == grid[8] != VOID_CHAR:
                 return grid[6]
-            if grid[2] == grid[5] == grid[8] != '':
+            if grid[2] == grid[5] == grid[8] != VOID_CHAR:
                 return grid[2]
-            if grid[0] == grid[4] == grid[8] != '':
+            if grid[0] == grid[4] == grid[8] != VOID_CHAR:
                 return grid[0]
             
-    if all(cell != '' for cell in grid):
+    if all(cell != VOID_CHAR for cell in grid):
         return 'Stale'
     
     return ""
@@ -114,8 +106,10 @@ def check_winner(grid: ndarray, index: int) -> str:
 
 class Morpion:
     def __init__(self,
-            board:ndarray=zeros((9, 9), dtype=str),
-            super_board:ndarray=zeros(9, dtype=str),
+            # board:ndarray=zeros((9, 9), dtype=str),
+            # super_board:ndarray=zeros(9, dtype=str),
+            board:ndarray=array([[VOID_CHAR for _ in range(9)] for _ in range(9)]),
+            super_board:ndarray=array([VOID_CHAR for _ in range(9)]),
             current_player:str='X',
             next_grid:Optional[int]=None
         ):
@@ -124,35 +118,22 @@ class Morpion:
         self.current_player = current_player
         self.next_grid = next_grid
 
-    def save_state_to_db(self, node: Node):
+    def getStringBoard(self) -> str:
         """
-        Save the current game state to the PostgreSQL database using SQLAlchemy.
+        Get the string representation of the board
         """
         
-        next_moves = {f"{child.upperGrid}-{child.subGrid}": child.current_player for child in node.children}
+        return ''.join(' ' if _ == '' else _ for _ in self.board.flatten())
 
-        new_state = GameState(
-            board_str=''.join(''.join(row) for row in self.board),
-            next_moves=next_moves,
-            current_player=self.current_player,
-            next_grid=self.next_grid
-        )
-
-        try:
-            session.add(new_state)
-            session.commit()
-        except IntegrityError:
-            session.rollback()  # Ignore if this state already exists
-    
     def getPossibleMoves(self) -> Generator[tuple[int, int], None, None]:
         """
         Get all possible moves
         """
         
         if self.next_grid:
-            yield from ((self.next_grid, pos) for pos, j in enumerate(self.board[self.next_grid]) if j == '')
+            yield from ((self.next_grid, pos) for pos, j in enumerate(self.board[self.next_grid]) if j == VOID_CHAR)
         else:
-            yield from ((i, j) for i in range(9) for j in range(9) if self.board[i][j] == '')
+            yield from ((i, j) for i in range(9) for j in range(9) if self.board[i][j] == VOID_CHAR)
 
     def make_move(self, grid:int, cell:int) -> bool:
         """
@@ -166,7 +147,7 @@ class Morpion:
             bool: True if the move is valid, else False
         """
         
-        if self.board[grid][cell] != '' or (self.next_grid is not None and grid != self.next_grid):
+        if self.board[grid][cell] != VOID_CHAR or (self.next_grid is not None and grid != self.next_grid):
             return False
         
 
@@ -177,7 +158,7 @@ class Morpion:
             self.super_board[grid] = winner
             check_winner(self.super_board, grid)
 
-        self.next_grid = cell if self.super_board[cell] == '' else None
+        self.next_grid = cell if self.super_board[cell] == VOID_CHAR else None
 
         self.current_player = 'O' if self.current_player == 'X' else 'X'
 
@@ -199,11 +180,6 @@ class Morpion:
         if depth >= max_depth:
             return
 
-        # winner = self.check_super_winner()
-        # if winner:
-        #     node.winner = winner
-        #     return
-
         for (upperGrid, subGrid) in self.getPossibleMoves():
             
             new_game = Morpion(
@@ -216,10 +192,8 @@ class Morpion:
             if new_game.make_move(upperGrid, subGrid):
 
                 child_node = Node(
-                    upperGrid=upperGrid,
-                    subGrid=subGrid,
                     current_player=new_game.current_player,
-                    next_grid=new_game.next_grid
+                    board=new_game.getStringBoard()
                 )
 
                 node.children.append(child_node)
@@ -233,7 +207,7 @@ class Morpion:
             max_depth (int): The maximum depth of the tree
         """
 
-        root = Node(None, None, self.current_player, self.next_grid)
+        root = Node(self.current_player, self.getStringBoard())
         self.generate_move_tree(root, 0, max_depth)
         self.save_tree(root)
 

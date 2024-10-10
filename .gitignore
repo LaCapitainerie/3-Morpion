@@ -26,3 +26,5 @@ go.work.sum
 tree.json
 
 __pycache__/
+
+_*
